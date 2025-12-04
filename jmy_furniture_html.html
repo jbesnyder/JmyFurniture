@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jmy Furniture</title>
+  <style>
+    /* -----------------------------
+       EASY‑TO‑EDIT STYLE VARIABLES
+    ----------------------------- */
+    :root {
+      --bg-color: #f4f4f4;
+      --text-color: #111;
+      --accent-color: #333;
+
+      /* Fonts */
+      --title-font: 'Arial Black', sans-serif; /* list titles */
+      --frame-font: 'Helvetica', sans-serif; /* frame area */
+
+      /* Layout */
+      --left-width: 33%;
+      --transition-speed: 0.35s;
+    }
+
+    body {
+      flex-direction: column;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      background: var(--bg-color);
+      color: var(--text-color);
+      overflow: hidden;
+      font-family: var(--frame-font);
+    }
+
+    /* -----------------------------
+       TOP BAR
+    ----------------------------- */
+    #topbar {
+      width: 100%;
+      padding: 15px 25px;
+      font-family: var(--title-font);
+      font-size: 2rem;
+      background: transparent;
+      color: #000;
+      box-sizing: border-box;
+    }
+
+    /* -----------------------------
+       CONTENT: SIDEBAR + FRAME
+    ----------------------------- */
+    #content {
+      display: flex;
+      flex-grow: 1;
+      height: 100%;
+    }
+
+    #sidebar {
+      width: var(--left-width);
+      padding: 30px;
+      background: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 12px;
+      box-sizing: border-box;
+    }
+
+    .project {
+      font-family: var(--title-font);
+      font-size: 1.6rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: color var(--transition-speed);
+      user-select: none;
+    }
+    .project:hover {
+      color: var(--accent-color);
+    }
+
+    /* -----------------------------
+       RIGHT IMAGE FRAME
+    ----------------------------- */
+    #frame {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+      flex-direction: column;
+    }
+
+    #display {
+      max-width: 90%;
+      max-height: 75%;
+      object-fit: contain;
+      border-radius: 8px;
+      transition: opacity var(--transition-speed);
+      display: block;
+    }
+
+    #thumbnails {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-top: 12px;
+      max-width: 90%;
+      padding-bottom: 6px;
+    }
+
+    #thumbnails img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      border: 2px solid transparent;
+    }
+    #thumbnails img:hover { transform: scale(1.03); }
+    #thumbnails img.active { box-shadow: 0 4px 10px rgba(0,0,0,0.12); border-color: var(--accent-color); }
+
+    /* responsive tweak */
+    @media (max-width: 800px) {
+      :root { --left-width: 45%; }
+      #display { max-height: 60%; }
+      #sidebar { padding: 18px; }
+    }
+    /* Description box */
+    .description {
+      font-size: 1rem;
+      line-height: 1.3;
+      margin: 0; /* collapse spacing when hidden */
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: all var(--transition-speed) ease;
+    }
+
+    .description.show {
+      opacity: 1;
+      max-height: 200px;
+      margin-top: 6px; /* restore spacing when shown */
+      margin-bottom: 10px;
+    }
+      .divider {
+      border: none;
+      border-top: 1px solid #bbb;
+      margin: 8px 0;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">Jmy Furniture</div>
+  <div id="content">
+    <div id="sidebar">
+      <!-- EASY TO ADD PROJECTS: now with optional data-desc -->
+      <hr class="divider">
+
+      <div class="project" data-images="images/lamp.jpg, images/lamp-detail1.jpg" data-desc="A sleek desk lamp in walnut finish with adjustable arm and warm LED lighting.">DeskLamp</div>
+      <div class="project" data-images="images/chair.jpg" data-desc="Comfortable mid-century inspired chair with oak legs and upholstered seat.">Chair</div>
+      <div class="project" data-images="images/stool.jpg" data-desc="Compact stool suitable for counters or as a side table; handcrafted from solid wood.">Stool</div>
+      <div class="project" data-images="images/shelf.jpg" data-desc="Wall-mounted shelf system with modular brackets for flexible storage." >Shelf</div>
+      <div class="project" data-images="images/deity-lamp.jpg" data-desc="Decorative lamp inspired by classical motifs; brass detailing and linen shade.">Deity Lamp</div>
+      <hr class="divider">
+      <!-- Added "Noe" project with filler text as requested -->
+      <div class="project" data-images="images/noe.jpg" data-desc="Noe — modern minimalist lamp with a sculptural silhouette and matte finish.">Noe</div>
+      <!-- Add more as needed -->
+    </div>
+
+    <div id="frame">
+      <img id="display" src="" alt="Project image" />
+      <div id="thumbnails" aria-hidden="false"></div>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+
+    function parseImagesFromProject(el) {
+      const raw = el.getAttribute('data-images') || el.getAttribute('data-image') || '';
+      if (!raw) return [];
+      return raw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const projects = Array.from(document.querySelectorAll('.project'));
+
+    const images = projects.flatMap(p => parseImagesFromProject(p));
+
+    let slideshow = null;
+
+    function showImage(src) {
+      if (!src) return;
+      display.style.opacity = 0;
+      setTimeout(() => {
+        display.src = src;
+        display.style.opacity = 1;
+      }, 200);
+    }
+
+    function showRandomImage() {
+      if (!images.length) return;
+      const randomIndex = Math.floor(Math.random() * images.length);
+      showImage(images[randomIndex]);
+    }
+
+    function startSlideshow() {
+      stopSlideshow();
+      showRandomImage();
+      slideshow = setInterval(showRandomImage, 3000);
+    }
+
+    function stopSlideshow() {
+      if (slideshow) { clearInterval(slideshow); slideshow = null; }
+    }
+
+    let projectSlideshow = null;
+
+    function buildThumbnails(imgs, activeIdx = 0) {
+      const box = document.getElementById('thumbnails');
+      box.innerHTML = '';
+      imgs.forEach((src, i) => {
+        const t = document.createElement('img');
+        t.src = src;
+        t.alt = 'thumbnail ' + (i+1);
+        if (i === activeIdx) t.classList.add('active');
+        t.addEventListener('click', () => {
+          showImage(src);
+          box.querySelectorAll('img').forEach(img => img.classList.remove('active'));
+          t.classList.add('active');
+        });
+        box.appendChild(t);
+      });
+    }
+
+    // DESCRIPTION HANDLING
+    function showDescription(project) {
+      let desc = project.nextElementSibling;
+      if (!desc || !desc.classList.contains('description')) {
+        desc = document.createElement('div');
+        desc.className = 'description';
+        desc.textContent = project.getAttribute('data-desc') || 'Description coming soon.';
+        project.insertAdjacentElement('afterend', desc);
+      }
+      // force reflow to allow transition when toggling
+      desc.classList.add('show');
+    }
+
+    function hideDescription(project) {
+      let desc = project.nextElementSibling;
+      if (desc && desc.classList.contains('description')) {
+        desc.classList.remove('show');
+      }
+    }
+
+    // Attach hover behavior to projects
+    projects.forEach(project => {
+      project.addEventListener('mouseenter', () => {
+        showDescription(project);
+
+        // stop global slideshow
+        stopSlideshow();
+        if (projectSlideshow) { clearInterval(projectSlideshow); projectSlideshow = null; }
+
+        const imgs = parseImagesFromProject(project);
+        if (!imgs.length) return;
+
+        // show first image immediately
+        showImage(imgs[0]);
+
+        // build thumbnails and mark first active
+        buildThumbnails(imgs, 0);
+
+        // start project-specific slideshow rotating through imgs
+        let idx = 0;
+        projectSlideshow = setInterval(() => {
+          idx = (idx + 1) % imgs.length;
+          showImage(imgs[idx]);
+          // update thumbnail active state
+          const thumbs = document.getElementById('thumbnails').querySelectorAll('img');
+          thumbs.forEach((t, i) => t.classList.toggle('active', i === idx));
+        }, 2500);
+      });
+
+      project.addEventListener('mouseleave', () => {
+        hideDescription(project);
+        // stop the project slideshow
+        if (projectSlideshow) { clearInterval(projectSlideshow); projectSlideshow = null; }
+        // clear thumbnails
+        const box = document.getElementById('thumbnails');
+        if (box) box.innerHTML = '';
+        // resume global slideshow
+        startSlideshow();
+      });
+    });
+
+    // Start the global slideshow on load
+    startSlideshow();
+  </script>
+</body>
+</html>
