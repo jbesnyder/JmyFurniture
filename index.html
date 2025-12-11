@@ -102,17 +102,18 @@
       flex-grow: 1;
       display: flex;
       justify-content: center;
-      align-items: top;
+      align-items: center;
       padding: 20px;
       box-sizing: border-box;
       flex-direction: column;
       overflow: hidden;
+      gap: 12px;
     }
 
     #display {
-      margin-top: 0;
+      margin: 0 auto;
       max-width: 90%;
-      max-height: calc(100% - 300px);
+      max-height: calc(100vh - 250px);
       object-fit: contain;
       border-radius: 8px;
       transition: opacity var(--transition-speed);
@@ -124,9 +125,10 @@
     #thumbnails {
       display: flex;
       justify-content: center;
+      align-items: center;
       gap: 8px;
       overflow-x: auto;
-      margin-top: 12px;
+      margin: 12px auto 0;
       max-width: 90%;
       padding-bottom: 6px;
       transition: opacity var(--transition-speed);
@@ -225,7 +227,7 @@
     <div id="sidebar">
       
 
-      <div class="project" tabindex="0" data-images="images/Twist02.jpg, images/Twist01.jpg" data-desc="2023 - Bittersweet vine and steel.">BitterSweetLamp</div>
+            <div class="project" tabindex="0" data-images="images/Twist02.jpg, images/Twist01.jpg" data-desc="2023 - Bittersweet vine and steel.">BitterSweetLamp</div>
       <div class="project" tabindex="0" data-images="images/Desklamp01.jpg, images/DeskLamp02.jpg, images/Desklamp03.jpg" data-desc="2023 - Beech, cherry and porcelin.">DeskLamp</div>
       <div class="project" tabindex="0" data-images="images/Deity01.jpg, images/Deity02.jpg, images/Deity03.jpg, images/Deity04.jpg, images/Deity05.gif" data-desc="2024 - Oak, silk and metal bits.">DeityLamp</div>
       <div class="project" tabindex="0" data-images="images/BeechLamp01.jpg" data-desc="2023 - Beech, Cherry and Beech leaves.">BeechLamp</div>
@@ -242,7 +244,6 @@
       <hr class="divider">
       <div class="project" tabindex="0" data-images="images/steel01.jpg, images/steel02.jpg, images/steel03.jpg, images/steel04.jpg, images/steel05.jpg, images/steel06.jpg" data-desc="2025.">SheetChair</div>
       <div class="project" tabindex="0" data-images="images/cab01.png, images/cab02.png, images/cab03.png" data-desc="2025.">ILostSomthingOfMine</div>
-    </div>
 
     <div id="frame">
       <img id="display" src="" alt="Furniture project display" />
