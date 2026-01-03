@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jmy Furniture</title>
+  <style>
+    :root {
+      --bg-color: #fffaed;
+      --text-color: #111;
+      --accent-color: #333;
+      --title-font: 'Arial Black', sans-serif;
+      --frame-font: 'Helvetica', sans-serif;
+      --left-width: 33%;
+      --transition-speed: 0.35s;
+      --thumbnail-size: 64px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      flex-direction: column;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      background: var(--bg-color);
+      color: var(--text-color);
+      overflow: hidden;
+      font-family: var(--frame-font);
+    }
+
+    #topbar {
+      width: 100%;
+      padding: 3px 25px;
+      font-family: var(--title-font);
+      font-size: 2rem;
+      background: transparent;
+      color: #000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #contact-info {
+      font-family: var(--frame-font);
+      font-size: .8rem;
+      font-weight: 300;
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    #content {
+      display: flex;
+      flex-grow: 1;
+      height: 100%;
+      min-height: 0;
+    }
+
+    #sidebar {
+      width: var(--left-width);
+      padding: 30px;
+      background: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 2px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .project {
+      font-family: var(--title-font);
+      font-size: 1rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: color var(--transition-speed), font-size var(--transition-speed);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      outline: none;
+      will-change: font-size;
+    }
+    
+    .project:hover,
+    .project:focus {
+      color: var(--accent-color);
+    }
+
+    #frame {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Image container for smooth crossfade */
+    #image-container {
+      position: relative;
+      width: 90%;
+      max-height: calc(100vh - 250px);
+      flex-shrink: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .display-image {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .display-image.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #thumbnails {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      overflow-x: auto;
+      margin-top: 12px;
+      max-width: 90%;
+      padding-bottom: 6px;
+      transition: opacity var(--transition-speed);
+      flex-shrink: 0;
+      max-height: 80px;
+    }
+
+    #thumbnails img {
+      width: var(--thumbnail-size);
+      height: var(--thumbnail-size);
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      border: 2px solid transparent;
+      flex-shrink: 0;
+    }
+    
+    #thumbnails img:hover { 
+      transform: scale(1.03); 
+    }
+    
+    #thumbnails img.active { 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12); 
+      border-color: var(--accent-color); 
+    }
+
+    .description {
+      display: inline-block;
+      position: relative;
+      opacity: 0;
+      margin-left: 6px;
+      font-size: 0.9rem;
+      font-family: Helvetica, Arial, sans-serif;
+      font-weight: 300;
+      line-height: 1.2;
+      white-space: nowrap;
+      transition: opacity var(--transition-speed);
+      max-width: 300px;
+      overflow: hidden;
+    }
+
+    .description.show {
+      opacity: 1;
+    }
+
+    .description-inner {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .description-inner.scrolling {
+      animation: descScroll 10s linear infinite;
+    }
+
+    @keyframes descScroll {
+      0%, 10% { 
+        transform: translateX(0); 
+      }
+      90%, 100% { 
+        transform: translateX(calc(100% - 300px)); 
+      }
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #bbb;
+      margin: 8px 0;
+      opacity: 0.6;
+    }
+
+    /* Loading indicator */
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.9rem;
+      color: #666;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #loading.show {
+      opacity: 1;
+    }
+
+    /* Controls indicator */
+    #controls-indicator {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: transparent;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: #333;
+      opacity: 0.5;
+      transition: opacity 0.3s, color 0.3s;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    #controls-indicator:hover {
+      opacity: 0.8;
+    }
+
+    #controls-indicator.manual-mode {
+      color: #111;
+      opacity: 0.7;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 2px 0;
+    }
+
+    .control-row.nav-keys {
+      gap: 4px;
+    }
+
+    .control-row.nav-keys .key-group {
+      display: flex;
+      gap: 3px;
+    }
+
+    .control-row.nav-keys .separator {
+      margin: 0 4px;
+      opacity: 0.5;
+    }
+
+    .key {
+      display: inline-block;
+      background: transparent;
+      border: 1px solid #999;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    #controls-indicator.manual-mode .key {
+      border-color: #333;
+    }
+
+    @media (max-width: 800px) {
+      :root { 
+        --left-width: 45%; 
+      }
+      #image-container { 
+        max-height: 60vh; 
+      }
+      #sidebar { 
+        padding: 18px; 
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 id="topbar">
+    <span>Jmy Furniture</span>
+    <div id="contact-info">
+      Jacob Snyder<br>
+      (401) 601-5428<br>
+      jacob.snyder008@gmail.com<br>
+      <a href="https://instagram.com/jmyfurniture" target="_blank" style="color: inherit; text-decoration: none;">@jmyfurniture</a>
+    </div>
+  </h1>
+  <hr class="divider">
+  <div id="content">
+    <div id="sidebar">
+      <div class="project" tabindex="0" data-images="images/Twist02.jpg, images/Twist01.jpg" data-desc="2023 - Bittersweet vine and steel.">BitterSweetLamp</div>
+      <div class="project" tabindex="0" data-images="images/Desklamp01.jpg, images/DeskLamp02.jpg, images/Desklamp03.jpg" data-desc="2023 - Beech, cherry and porcelin.">DeskLamp</div>
+      <div class="project" tabindex="0" data-images="images/Deity01.jpg, images/Deity02.jpg, images/Deity03.jpg, images/Deity04.jpg, images/Deity05.gif" data-desc="2024 - Oak, silk and metal bits.">DeityLamp</div>
+      <div class="project" tabindex="0" data-images="images/BeechLamp01.jpg" data-desc="2023 - Beech, Cherry and Beech leaves.">BeechLamp</div>
+      <hr class="divider">
+      <div class="project" tabindex="0" data-images="images/tree01.jpg, images/tree02.jpg, images/tree03.jpg" data-desc="2024 - Cypress and boxwood.">appleTreeChair</div>
+      <div class="project" tabindex="0" data-images="images/tiles01.jpg, images/tiles02.jpg, images/tiles03.jpg, images/tiles04.jpg" data-desc="2025 - Steel tube and pine.">TileChair</div>
+      <div class="project" tabindex="0" data-images="images/draft01.jpg" data-desc="2023 - Walnut and Steel.">DraftingDesk+Stool</div>
+      <div class="project" tabindex="0" data-images="images/Bench01.jpg, images/Bench02.jpg" data-desc="2023 - Pine log and a Radiator.">SolsticeBench</div>
+      <hr class="divider">
+      <div class="project" tabindex="0" data-images="images/Garbage01.jpg" data-desc="2025 - Oak and acrylic.">GarbageCan</div>
+      <div class="project" tabindex="0" data-images="images/Dovetails01.jpg, images/Dovetails02.jpg, images/Dovetails03.jpg, images/Dovetails04.webp" data-desc="2024 - Red cedar.">Dovetails</div>
+      <div class="project" tabindex="0" data-images="images/CandleGuards01.jpg, images/CandleGuards2.jpg, images/Candle03.jpg" data-desc="2025 - Boxwood.">CandleBowl</div>
+      <div class="project" tabindex="0" data-images="images/basket01.jpg, images/Basket02.jpg, images/Basket03.jpg" data-desc="2025 - Oak and Paduk.">Basket</div>
+      <hr class="divider">
+      <div class="project" tabindex="0" data-images="images/steel01.jpg, images/steel02.jpg, images/steel03.jpg, images/steel04.jpg, images/steel05.jpg, images/steel06.JPG" data-desc="2025.">SheetChair</div>
+      <div class="project" tabindex="0" data-images="images/cab01.png, images/cab02.png, images/cab03.png" data-desc="2025.">ILostSomthingOfMine</div>
+    </div>
+
+    <div id="frame">
+      <div id="image-container">
+        <img class="display-image" id="img1" alt="Furniture project display" />
+        <img class="display-image" id="img2" alt="Furniture project display" />
+        <div id="loading">Loading...</div>
+      </div>
+      <div id="thumbnails"></div>
+    </div>
+  </div>
+
+  <div id="controls-indicator">
+    <div class="control-row">
+      <span class="key">SPACE</span>
+      <span>pause/play</span>
+    </div>
+    <div class="control-row nav-keys" style="opacity: 0.4;">
+      <div class="key-group">
+        <span class="key">←</span>
+        <span class="key">→</span>
+      </div>
+      <span>images</span>
+      <span class="separator">|</span>
+      <div class="key-group">
+        <span class="key">↑</span>
+        <span class="key">↓</span>
+      </div>
+      <span>projects</span>
+    </div>
+  </div>
+
+  <script>
+    const TIMINGS = {
+      GLOBAL_SLIDESHOW: 3000,
+      PROJECT_SLIDESHOW: 2500,
+      RESUME_DELAY: 1000,
+      FADE_TRANSITION: 300
+    };
+
+    const img1 = document.getElementById('img1');
+    const img2 = document.getElementById('img2');
+    const loading = document.getElementById('loading');
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    const imageContainer = document.getElementById('image-container');
+    const controlsIndicator = document.getElementById('controls-indicator');
+
+    let currentDisplayImg = img1;
+    let nextDisplayImg = img2;
+    currentDisplayImg.classList.add('active');
+
+    // Image cache
+    const imageCache = new Map();
+    const preloadQueue = [];
+
+    function preloadImage(src) {
+      if (imageCache.has(src)) return Promise.resolve(imageCache.get(src));
+      
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          imageCache.set(src, img);
+          resolve(img);
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function preloadImages(srcs) {
+      srcs.forEach(src => {
+        if (!imageCache.has(src) && !preloadQueue.includes(src)) {
+          preloadQueue.push(src);
+          preloadImage(src).catch(() => console.warn('Failed to preload:', src));
+        }
+      });
+    }
+
+    function parseImagesFromProject(el) {
+      const raw = el.getAttribute('data-images') || el.getAttribute('data-image') || '';
+      if (!raw) return [];
+      return raw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const projects = Array.from(document.querySelectorAll('.project'));
+    const images = projects.flatMap(p => parseImagesFromProject(p));
+
+    let slideshow = null;
+    let resumeTimeout = null;
+    let projectSlideshow = null;
+    let shuffledImages = [];
+    let currentImageIndex = 0;
+    let isManualMode = false;
+    let manualImageIndex = 0;
+    let activeProject = null;
+    let activeProjectImages = [];
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    async function showImage(src) {
+      if (!src) return;
+      
+      // Show loading indicator
+      loading.classList.add('show');
+      
+      try {
+        await preloadImage(src);
+        
+        // Hide loading
+        loading.classList.remove('show');
+        
+        // Swap images for smooth crossfade
+        nextDisplayImg.src = src;
+        nextDisplayImg.alt = `Furniture project: ${src.split('/').pop().split('.')[0]}`;
+        
+        // Crossfade
+        currentDisplayImg.classList.remove('active');
+        nextDisplayImg.classList.add('active');
+        
+        // Swap references
+        [currentDisplayImg, nextDisplayImg] = [nextDisplayImg, currentDisplayImg];
+        
+      } catch (err) {
+        console.warn('Failed to load image:', src);
+        loading.classList.remove('show');
+      }
+    }
+
+    function showRandomImage() {
+      if (!images.length) return;
+      
+      if (currentImageIndex >= shuffledImages.length) {
+        shuffledImages = shuffleArray(images);
+        currentImageIndex = 0;
+      }
+      
+      showImage(shuffledImages[currentImageIndex]);
+      
+      // Preload next few images
+      const nextImages = [];
+      for (let i = 1; i <= 3; i++) {
+        const idx = (currentImageIndex + i) % shuffledImages.length;
+        nextImages.push(shuffledImages[idx]);
+      }
+      preloadImages(nextImages);
+      
+      currentImageIndex++;
+    }
+
+    function startSlideshow() {
+      if (isManualMode) return;
+      stopSlideshow();
+      showRandomImage();
+      slideshow = setInterval(showRandomImage, TIMINGS.GLOBAL_SLIDESHOW);
+    }
+
+    function stopSlideshow() {
+      if (slideshow) { 
+        clearInterval(slideshow); 
+        slideshow = null; 
+      }
+    }
+
+    function stopProjectSlideshow() {
+      if (projectSlideshow) { 
+        clearInterval(projectSlideshow); 
+        projectSlideshow = null; 
+      }
+    }
+
+    function toggleManualMode() {
+      isManualMode = !isManualMode;
+      
+      // Update indicator
+      const controlRows = controlsIndicator.querySelectorAll('.control-row');
+      if (isManualMode) {
+        controlsIndicator.classList.add('manual-mode');
+        controlRows.forEach(row => row.style.opacity = '1');
+      } else {
+        controlsIndicator.classList.remove('manual-mode');
+        controlRows.forEach((row, i) => {
+          if (i > 0) row.style.opacity = '0.4';
+        });
+      }
+      
+      if (isManualMode) {
+        stopSlideshow();
+        stopProjectSlideshow();
+        
+        if (activeProject) {
+          const imgs = parseImagesFromProject(activeProject);
+          activeProjectImages = imgs;
+          const currentSrc = currentDisplayImg.src.split('/').pop();
+          manualImageIndex = imgs.findIndex(img => img.includes(currentSrc));
+          if (manualImageIndex === -1) manualImageIndex = 0;
+        } else {
+          activeProjectImages = [];
+          const currentSrc = currentDisplayImg.src.split('/').pop();
+          manualImageIndex = shuffledImages.findIndex(img => img.includes(currentSrc));
+          if (manualImageIndex === -1) {
+            manualImageIndex = currentImageIndex > 0 ? currentImageIndex - 1 : 0;
+          }
+        }
+      } else {
+        if (activeProject) {
+          const imgs = parseImagesFromProject(activeProject);
+          if (imgs.length > 0) {
+            let idx = manualImageIndex;
+            projectSlideshow = setInterval(() => {
+              idx = (idx + 1) % imgs.length;
+              showImage(imgs[idx]);
+              const thumbs = thumbnailsContainer.querySelectorAll('img');
+              thumbs.forEach((t, i) => t.classList.toggle('active', i === idx));
+            }, TIMINGS.PROJECT_SLIDESHOW);
+          }
+        } else {
+          startSlideshow();
+        }
+      }
+    }
+
+    function navigateManual(direction) {
+      if (!isManualMode) return;
+      
+      const imagesToUse = activeProjectImages.length > 0 ? activeProjectImages : shuffledImages;
+      if (!imagesToUse.length) return;
+      
+      if (direction === 'left') {
+        manualImageIndex = (manualImageIndex - 1 + imagesToUse.length) % imagesToUse.length;
+      } else if (direction === 'right') {
+        manualImageIndex = (manualImageIndex + 1) % imagesToUse.length;
+      }
+      
+      showImage(imagesToUse[manualImageIndex]);
+      
+      if (activeProjectImages.length > 0) {
+        const thumbs = thumbnailsContainer.querySelectorAll('img');
+        thumbs.forEach((t, i) => t.classList.toggle('active', i === manualImageIndex));
+      }
+    }
+
+    function navigateProjects(direction) {
+      if (!isManualMode) return;
+      
+      const currentIndex = projects.indexOf(activeProject);
+      let newIndex;
+      
+      if (direction === 'up') {
+        newIndex = currentIndex > 0 ? currentIndex - 1 : projects.length - 1;
+      } else if (direction === 'down') {
+        newIndex = currentIndex < projects.length - 1 ? currentIndex + 1 : 0;
+      }
+      
+      // Deactivate current project without triggering resume
+      if (activeProject) {
+        activeProject.style.fontSize = '1rem';
+        hideDescription(activeProject);
+        stopProjectSlideshow();
+      }
+      
+      // Activate new project
+      const newProject = projects[newIndex];
+      activeProject = newProject;
+      newProject.style.fontSize = '1.4rem';
+      showDescription(newProject);
+      
+      const imgs = parseImagesFromProject(newProject);
+      if (imgs.length > 0) {
+        activeProjectImages = imgs;
+        manualImageIndex = 0;
+        
+        // Preload all project images
+        preloadImages(imgs);
+        
+        showImage(imgs[0]);
+        buildThumbnails(imgs, 0);
+      }
+      
+      // Scroll project into view
+      newProject.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function buildThumbnails(imgs, activeIdx = 0) {
+      thumbnailsContainer.innerHTML = '';
+      imgs.forEach((src, i) => {
+        const t = document.createElement('img');
+        t.src = src;
+        t.alt = `Thumbnail ${i + 1}`;
+        if (i === activeIdx) t.classList.add('active');
+        t.addEventListener('click', () => {
+          showImage(src);
+          thumbnailsContainer.querySelectorAll('img').forEach(img => img.classList.remove('active'));
+          t.classList.add('active');
+        });
+        thumbnailsContainer.appendChild(t);
+      });
+    }
+
+    function clearThumbnails() {
+      thumbnailsContainer.innerHTML = '';
+    }
+
+    function showDescription(project) {
+      let desc = project.querySelector('.description');
+      if (!desc) {
+        desc = document.createElement('span');
+        desc.className = 'description';
+        
+        const inner = document.createElement('span');
+        inner.className = 'description-inner';
+        inner.textContent = project.getAttribute('data-desc') || 'Description coming soon.';
+        
+        desc.appendChild(inner);
+        project.appendChild(desc);
+      }
+      
+      const inner = desc.querySelector('.description-inner');
+      desc.classList.add('show');
+      inner.classList.remove('scrolling');
+
+      setTimeout(() => {
+        const descWidth = desc.offsetWidth;
+        const innerWidth = inner.scrollWidth;
+        
+        if (innerWidth > descWidth) {
+          inner.classList.add('scrolling');
+        }
+      }, 500);
+    }
+
+    function hideDescription(project) {
+      const desc = project.querySelector('.description');
+      if (desc) {
+        desc.classList.remove('show');
+        const inner = desc.querySelector('.description-inner');
+        if (inner) {
+          inner.classList.remove('scrolling');
+        }
+      }
+    }
+
+    function activateProject(project) {
+      if (isManualMode) return;
+      
+      if (resumeTimeout) { 
+        clearTimeout(resumeTimeout); 
+        resumeTimeout = null; 
+      }
+
+      activeProject = project;
+      project.style.fontSize = '1.4rem';
+      showDescription(project);
+
+      stopSlideshow();
+      stopProjectSlideshow();
+
+      const imgs = parseImagesFromProject(project);
+      if (!imgs.length) return;
+
+      // Preload all project images
+      preloadImages(imgs);
+
+      showImage(imgs[0]);
+      buildThumbnails(imgs, 0);
+
+      let idx = 0;
+      projectSlideshow = setInterval(() => {
+        idx = (idx + 1) % imgs.length;
+        showImage(imgs[idx]);
+        const thumbs = thumbnailsContainer.querySelectorAll('img');
+        thumbs.forEach((t, i) => t.classList.toggle('active', i === idx));
+      }, TIMINGS.PROJECT_SLIDESHOW);
+    }
+
+    function deactivateProject(project) {
+      if (isManualMode) return;
+      
+      activeProject = null;
+      activeProjectImages = [];
+      project.style.fontSize = '1rem';
+      hideDescription(project);
+      
+      stopProjectSlideshow();
+
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+      resumeTimeout = setTimeout(() => {
+        clearThumbnails();
+        startSlideshow();
+      }, TIMINGS.RESUME_DELAY);
+    }
+
+    projects.forEach(project => {
+      project.addEventListener('mouseenter', () => activateProject(project));
+      project.addEventListener('mouseleave', () => deactivateProject(project));
+      
+      project.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          activateProject(project);
+        }
+      });
+      
+      project.addEventListener('blur', () => {
+        deactivateProject(project);
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault();
+        toggleManualMode();
+      }
+      
+      if (isManualMode) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          navigateManual('left');
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          navigateManual('right');
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          navigateProjects('up');
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          navigateProjects('down');
+        }
+      }
+    });
+
+    // Initialize
+    if (images.length > 0) {
+      shuffledImages = shuffleArray(images);
+      // Preload first 5 images
+      preloadImages(shuffledImages.slice(0, 5));
+      startSlideshow();
+    } else {
+      console.warn('No images found in projects');
+    }
+  </script>
+</body>
+</html>
