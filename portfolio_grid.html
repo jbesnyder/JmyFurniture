@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            justify-content: center;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 50px;
+            font-size: 3em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 100px);
+            gap: 20px;
+            justify-content: start;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .grid-item {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .grid-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .grid-item:hover img {
+            filter: grayscale(0%);
+            width: 200px;
+            height: 200px;
+            transform: translate(-50px, -50px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+        }
+
+        .divider {
+            grid-column: 1 / -1;
+            border: none;
+            border-top: 1px solid #333;
+            margin: 20px 0;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            display: flex;
+            gap: 40px;
+            max-width: 1400px;
+            width: 100%;
+            height: 90vh;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-image {
+            flex: 0 0 65%;
+            height: 100%;
+            position: relative;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .image-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .image-nav button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background: transparent;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .image-nav button.active {
+            background: #fff;
+        }
+
+        .modal-text {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 20px;
+        }
+
+        .modal-text::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-text::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .modal-text::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        .modal-text h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .modal-text p {
+            line-height: 1.8;
+            color: #ccc;
+            font-size: 1.2em;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 40px;
+            color: #fff;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 1001;
+            transition: transform 0.2s ease;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .arrow-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 40px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            transition: background 0.3s ease;
+        }
+
+        .arrow-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .arrow-btn.prev {
+            left: 10px;
+        }
+
+        .arrow-btn.next {
+            right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .modal-image {
+                flex: 0 0 auto;
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Portfolio</h1>
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="modal" id="modal">
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+        <button class="arrow-btn prev" onclick="changeImage(-1)">‹</button>
+        <button class="arrow-btn next" onclick="changeImage(1)">›</button>
+        <div class="modal-content">
+            <div class="modal-image">
+                <img id="modalImg" src="" alt="">
+                <div class="image-nav" id="imageNav"></div>
+            </div>
+            <div class="modal-text">
+                <h2 id="modalTitle"></h2>
+                <p id="modalDescription"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const portfolioItems = [
+            {
+                title: "BitterSweetLamp",
+                description: "2023 - Bittersweet vine and steel.",
+                images: ["images/Twist02.jpg", "images/Twist01.jpg"]
+            },
+            {
+                title: "DeskLamp",
+                description: "2023 - Beech, cherry and porcelin.",
+                images: ["images/Desklamp01.jpg", "images/DeskLamp02.jpg", "images/Desklamp03.jpg"]
+            },
+            {
+                title: "DeityLamp",
+                description: "2024 - Oak, silk and metal bits.",
+                images: ["images/Deity01.jpg", "images/Deity02.jpg", "images/Deity03.jpg", "images/Deity04.jpg", "images/Deity05.gif"]
+            },
+            {
+                title: "BeechLamp",
+                description: "2023 - Beech, Cherry and Beech leaves.",
+                images: ["images/BeechLamp01.jpg"]
+            },
+            {
+                title: "appleTreeChair",
+                description: "2024 - Cypress and boxwood.",
+                images: ["images/tree01.jpg", "images/tree02.jpg", "images/tree03.jpg"]
+            },
+            {
+                title: "TileChair",
+                description: "2025 - Steel tube and pine.",
+                images: ["images/tiles01.jpg", "images/tiles02.jpg", "images/tiles03.jpg", "images/tiles04.jpg"]
+            },
+            {
+                title: "DraftingDesk+Stool",
+                description: "2023 - Walnut and Steel.",
+                images: ["images/draft01.jpg"]
+            },
+            {
+                title: "SolsticeBench",
+                description: "2023 - Pine log and a Radiator.",
+                images: ["images/Bench01.jpg", "images/Bench02.jpg"]
+            },
+            {
+                title: "GarbageCan",
+                description: "2025 - Oak and acrylic.",
+                images: ["images/Garbage01.jpg"]
+            },
+            {
+                title: "Dovetails",
+                description: "2024 - Red cedar.",
+                images: ["images/Dovetails01.jpg", "images/Dovetails02.jpg", "images/Dovetails03.jpg", "images/Dovetails04.jpg"]
+            },
+            {
+                title: "CandleBowl",
+                description: "2025 - Boxwood.",
+                images: ["images/CandleGuards01.jpg", "images/CandleGuards2.jpg", "images/Candle03.jpg"]
+            },
+            {
+                title: "Basket",
+                description: "2025 - Oak and Paduk.",
+                images: ["images/basket01.jpg", "images/Basket02.jpg", "images/Basket03.jpg"]
+            },
+            {
+                title: "SheetChair",
+                description: "2025.",
+                images: ["images/steel01.jpg", "images/steel02.jpg", "images/steel03.jpg", "images/steel04.jpg", "images/steel05.jpg", "images/steel06.jpg"]
+            },
+            {
+                title: "ILostSomthingOfMine",
+                description: "2025.",
+                images: ["images/cab01.png", "images/cab02.png", "images/cab03.png"]
+            }
+        ];
+
+        const grid = document.getElementById('grid');
+        const modal = document.getElementById('modal');
+        let currentProject = null;
+        let currentImageIndex = 0;
+
+        portfolioItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'grid-item';
+            div.innerHTML = `<img src="${item.images[0]}" alt="${item.title}">`;
+            div.onclick = () => openModal(index);
+            grid.appendChild(div);
+        });
+
+        function openModal(index) {
+            const item = portfolioItems[index];
+            
+            currentProject = item;
+            currentImageIndex = 0;
+            updateModalImage();
+            document.getElementById('modalTitle').textContent = item.title;
+            document.getElementById('modalDescription').textContent = item.description;
+            
+            createImageNav();
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function createImageNav() {
+            const nav = document.getElementById('imageNav');
+            nav.innerHTML = '';
+            
+            if (currentProject.images.length > 1) {
+                currentProject.images.forEach((_, index) => {
+                    const btn = document.createElement('button');
+                    if (index === currentImageIndex) btn.classList.add('active');
+                    btn.onclick = () => {
+                        currentImageIndex = index;
+                        updateModalImage();
+                    };
+                    nav.appendChild(btn);
+                });
+            }
+        }
+
+        function updateModalImage() {
+            document.getElementById('modalImg').src = currentProject.images[currentImageIndex];
+            createImageNav();
+        }
+
+        function changeImage(direction) {
+            if (!currentProject || currentProject.images.length <= 1) return;
+            
+            currentImageIndex += direction;
+            if (currentImageIndex < 0) currentImageIndex = currentProject.images.length - 1;
+            if (currentImageIndex >= currentProject.images.length) currentImageIndex = 0;
+            
+            updateModalImage();
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            currentProject = null;
+        }
+
+        modal.onclick = (e) => {
+            if (e.target === modal) closeModal();
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === 'ArrowLeft') changeImage(-1);
+            if (e.key === 'ArrowRight') changeImage(1);
+        });
+    </script>
+</body>
+</html>
